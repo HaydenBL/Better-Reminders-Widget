@@ -112,6 +112,8 @@ struct Safe_Reminders_Widget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             Safe_Reminders_WidgetEntryView(entry: entry)
                 .containerBackground(for: .widget) { Color.clear }
+                // Widget taps always open our own app; it forwards to Apple's Reminders app.
+                .widgetURL(URL(string: "saferemindersapp://open-reminders"))
         }
         .configurationDisplayName("Safe Reminders")
         .description("Shows your reminders without checkboxes.")
