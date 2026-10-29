@@ -95,8 +95,11 @@ struct Safe_Reminders_WidgetEntryView : View {
         } else {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(entry.reminders.prefix(3)) { reminder in
-                    Text(reminder.title)
-                        .lineLimit(1)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text("•")
+                        Text(reminder.title)
+                            .lineLimit(1)
+                    }
                 }
             }
             .font(.caption)
