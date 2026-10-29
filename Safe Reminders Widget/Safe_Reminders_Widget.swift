@@ -71,12 +71,13 @@ struct Safe_Reminders_Widget: Widget {
                     .background()
             }
         }
-        .configurationDisplayName("My Widget")
-        .description("This is an example widget.")
+        .configurationDisplayName("Safe Reminders")
+        .description("Shows your reminders without checkboxes.")
+        .supportedFamilies([.accessoryRectangular, .accessoryCircular, .accessoryInline])
     }
 }
 
-#Preview(as: .systemSmall) {
+#Preview(as: .accessoryRectangular) {
     Safe_Reminders_Widget()
 } timeline: {
     SimpleEntry(date: .now, emoji: "😀")
