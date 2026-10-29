@@ -73,7 +73,7 @@ struct Safe_Reminders_Widget: Widget {
         }
         .configurationDisplayName("Safe Reminders")
         .description("Shows your reminders without checkboxes.")
-        .supportedFamilies([.accessoryRectangular, .accessoryCircular, .accessoryInline])
+        .supportedFamilies([.accessoryRectangular])
     }
 }
 
