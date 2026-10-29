@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import WidgetKit
 
 @main
 struct Better_Reminders_WidgetApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -19,6 +22,13 @@ struct Better_Reminders_WidgetApp: App {
                         openRemindersApp()
                     }
                 }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Reloads requested while the app is in the foreground don't use up the
+            // widget's daily refresh budget, so refresh every time the app opens.
+            if phase == .active {
+                WidgetCenter.shared.reloadAllTimelines()
+            }
         }
     }
 

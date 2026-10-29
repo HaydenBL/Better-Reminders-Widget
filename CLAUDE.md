@@ -30,5 +30,5 @@ A read-only replacement for the iOS Reminders **Lock Screen** widget. The system
 2. ~~EventKit fetch of today's + overdue incomplete reminders~~ (done, needs on-device check)
 3. ~~Rectangular view: 2 reminders + times, "All done" empty state~~ (done, needs on-device check)
 4. `.widgetURL` to open Reminders; test on device
-5. Refresh the widget when reminders change
+5. Refresh the widget when reminders change. Partly done: the timeline asks for a reload every 15 min (iOS may stretch this, with a budget of roughly 40–70/day), and the app reloads all timelines whenever it becomes active. A widget can't observe Reminders changes while our app isn't running, so edits made in Reminders show up on the next scheduled refresh.
 6. Later, optional: configuration intent to choose which list to show
