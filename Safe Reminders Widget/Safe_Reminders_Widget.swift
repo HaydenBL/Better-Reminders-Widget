@@ -7,52 +7,100 @@
 
 import WidgetKit
 import SwiftUI
+import EventKit
+
+struct ReminderItem: Identifiable {
+    let id: String
+    let title: String
+    let dueDate: Date
+}
+
+struct ReminderEntry: TimelineEntry {
+    let date: Date
+    let reminders: [ReminderItem]
+    var hasAccess = true
+
+    static let sample = ReminderEntry(date: .now, reminders: [
+        ReminderItem(id: "1", title: "Buy milk", dueDate: .now),
+        ReminderItem(id: "2", title: "Call dentist", dueDate: .now),
+        ReminderItem(id: "3", title: "Pay rent", dueDate: .now),
+    ])
+}
 
 struct Provider: TimelineProvider {
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), emoji: "😀")
+    func placeholder(in context: Context) -> ReminderEntry {
+        .sample
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), emoji: "😀")
-        completion(entry)
+    func getSnapshot(in context: Context, completion: @escaping (ReminderEntry) -> ()) {
+        if context.isPreview {
+            completion(.sample)
+        } else {
+            fetchEntry(completion: completion)
+        }
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var entries: [SimpleEntry] = []
-
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, emoji: "😀")
-            entries.append(entry)
+        fetchEntry { entry in
+            // Refresh periodically so the list stays current and rolls over at midnight.
+            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: entry.date)!
+            completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
         }
-
-        let timeline = Timeline(entries: entries, policy: .atEnd)
-        completion(timeline)
     }
 
-//    func relevances() async -> WidgetRelevances<Void> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
-}
+    /// Fetches incomplete reminders that are due today or overdue, across all lists.
+    private func fetchEntry(completion: @escaping (ReminderEntry) -> ()) {
+        let now = Date()
+        guard EKEventStore.authorizationStatus(for: .reminder) == .fullAccess else {
+            completion(ReminderEntry(date: now, reminders: [], hasAccess: false))
+            return
+        }
 
-struct SimpleEntry: TimelineEntry {
-    let date: Date
-    let emoji: String
+        let calendar = Calendar.current
+        let endOfToday = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))!
+        let store = EKEventStore()
+        let predicate = store.predicateForIncompleteReminders(
+            withDueDateStarting: nil, ending: endOfToday, calendars: nil)
+
+        store.fetchReminders(matching: predicate) { reminders in
+            let items = (reminders ?? []).compactMap { reminder -> ReminderItem? in
+                guard let components = reminder.dueDateComponents,
+                      let dueDate = calendar.date(from: components),
+                      dueDate < endOfToday else { return nil }
+                return ReminderItem(
+                    id: reminder.calendarItemIdentifier,
+                    title: reminder.title ?? "",
+                    dueDate: dueDate)
+            }
+            .sorted { $0.dueDate < $1.dueDate }
+
+            // Referencing the store keeps it alive until the fetch finishes.
+            withExtendedLifetime(store) {
+                completion(ReminderEntry(date: now, reminders: items))
+            }
+        }
+    }
 }
 
 struct Safe_Reminders_WidgetEntryView : View {
     var entry: Provider.Entry
 
     var body: some View {
-        VStack {
-            Text("Time:")
-            Text(entry.date, style: .time)
-
-            Text("Emoji:")
-            Text(entry.emoji)
+        if !entry.hasAccess {
+            Label("Open the app to allow access", systemImage: "lock")
+                .font(.caption)
+        } else if entry.reminders.isEmpty {
+            Label("All done", systemImage: "checkmark.circle")
+                .font(.headline)
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(entry.reminders.prefix(3)) { reminder in
+                    Text(reminder.title)
+                        .lineLimit(1)
+                }
+            }
+            .font(.caption)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -62,14 +110,8 @@ struct Safe_Reminders_Widget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
-            if #available(iOS 17.0, *) {
-                Safe_Reminders_WidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                Safe_Reminders_WidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
-            }
+            Safe_Reminders_WidgetEntryView(entry: entry)
+                .containerBackground(for: .widget) { Color.clear }
         }
         .configurationDisplayName("Safe Reminders")
         .description("Shows your reminders without checkboxes.")
@@ -80,6 +122,7 @@ struct Safe_Reminders_Widget: Widget {
 #Preview(as: .accessoryRectangular) {
     Safe_Reminders_Widget()
 } timeline: {
-    SimpleEntry(date: .now, emoji: "😀")
-    SimpleEntry(date: .now, emoji: "🤩")
+    ReminderEntry.sample
+    ReminderEntry(date: .now, reminders: [])
+    ReminderEntry(date: .now, reminders: [], hasAccess: false)
 }
