@@ -13,6 +13,12 @@ struct ReminderItem: Identifiable {
     let id: String
     let title: String
     let dueDate: Date
+    let hasTime: Bool
+
+    /// Timed reminders are overdue once their time passes; all-day ones only from the next day.
+    func isOverdue(at now: Date) -> Bool {
+        hasTime ? dueDate <= now : dueDate < Calendar.current.startOfDay(for: now)
+    }
 }
 
 struct ReminderEntry: TimelineEntry {
@@ -21,9 +27,9 @@ struct ReminderEntry: TimelineEntry {
     var hasAccess = true
 
     static let sample = ReminderEntry(date: .now, reminders: [
-        ReminderItem(id: "1", title: "Buy milk", dueDate: .now),
-        ReminderItem(id: "2", title: "Call dentist", dueDate: .now),
-        ReminderItem(id: "3", title: "Pay rent", dueDate: .now),
+        ReminderItem(id: "1", title: "Buy milk", dueDate: .now.addingTimeInterval(-3600), hasTime: true),
+        ReminderItem(id: "2", title: "Call dentist", dueDate: .now, hasTime: false),
+        ReminderItem(id: "3", title: "Pay rent", dueDate: .now.addingTimeInterval(3600), hasTime: true),
     ])
 }
 
@@ -44,7 +50,12 @@ struct Provider: TimelineProvider {
         fetchEntry { entry in
             // Refresh periodically so the list stays current and rolls over at midnight.
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: entry.date)!
-            completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+            // Extra entries at each upcoming due time flip that reminder's bullet to "!"
+            // on time, without waiting for a refresh.
+            let dueEntries = entry.reminders
+                .filter { $0.hasTime && $0.dueDate > entry.date }
+                .map { ReminderEntry(date: $0.dueDate, reminders: entry.reminders) }
+            completion(Timeline(entries: [entry] + dueEntries, policy: .after(nextUpdate)))
         }
     }
 
@@ -70,7 +81,8 @@ struct Provider: TimelineProvider {
                 return ReminderItem(
                     id: reminder.calendarItemIdentifier,
                     title: reminder.title ?? "",
-                    dueDate: dueDate)
+                    dueDate: dueDate,
+                    hasTime: components.hour != nil)
             }
             .sorted { $0.dueDate < $1.dueDate }
 
@@ -96,13 +108,23 @@ struct Safe_Reminders_WidgetEntryView : View {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(entry.reminders.prefix(3)) { reminder in
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("•")
+                        // Hidden copies of both markers keep titles lined up whichever one shows.
+                        ZStack {
+                            Text("•").hidden()
+                            Text("!").bold().hidden()
+                            if reminder.isOverdue(at: entry.date) {
+                                Text("!").bold()
+                            } else {
+                                Text("•")
+                            }
+                        }
                         Text(reminder.title)
                             .lineLimit(1)
                     }
                 }
             }
-            .font(.caption)
+            // Full-size text fits 2 lines; shrink only when showing 3.
+            .font(entry.reminders.count > 2 ? .caption : nil)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -128,6 +150,7 @@ struct Safe_Reminders_Widget: Widget {
     Safe_Reminders_Widget()
 } timeline: {
     ReminderEntry.sample
+    ReminderEntry(date: .now, reminders: Array(ReminderEntry.sample.reminders.prefix(2)))
     ReminderEntry(date: .now, reminders: [])
     ReminderEntry(date: .now, reminders: [], hasAccess: false)
 }
