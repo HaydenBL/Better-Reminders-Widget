@@ -106,6 +106,11 @@ struct Safe_Reminders_WidgetEntryView : View {
                 .font(.headline)
         } else {
             VStack(alignment: .leading, spacing: 0) {
+                // With a single reminder there's room for a header, like the system widget.
+                if entry.reminders.count == 1 {
+                    Text("Today")
+                        .font(.system(.headline, design: .rounded, weight: .bold))
+                }
                 ForEach(entry.reminders.prefix(3)) { reminder in
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         // Hidden copies of both markers keep titles lined up whichever one shows.
@@ -151,6 +156,7 @@ struct Safe_Reminders_Widget: Widget {
 } timeline: {
     ReminderEntry.sample
     ReminderEntry(date: .now, reminders: Array(ReminderEntry.sample.reminders.prefix(2)))
+    ReminderEntry(date: .now, reminders: Array(ReminderEntry.sample.reminders.prefix(1)))
     ReminderEntry(date: .now, reminders: [])
     ReminderEntry(date: .now, reminders: [], hasAccess: false)
 }

@@ -9,7 +9,7 @@ A read-only replacement for the iOS Reminders **Lock Screen** widget. The system
 ## Design decisions
 - **Which reminders:** incomplete reminders due today or overdue (like the system "Today" list). No-due-date reminders are hidden.
 - **Lists:** all lists combined. No list picker for now.
-- **Layout:** up to 3 reminder titles, one per line, no due times (times didn't fit on device). Sorted by due date, overdue first. Default font when there are 1–2 reminders, `.caption` when there are 3+.
+- **Layout:** up to 3 reminder titles, one per line, no due times (times didn't fit on device). Sorted by due date, overdue first. Default font when there are 1–2 reminders, `.caption` when there are 3+. With exactly 1 reminder, a "Today" header in `.system(.headline, design: .rounded, weight: .bold)` (SF Pro Rounded) sits above it (copies the system widget).
 - **Markers:** each line starts with `•`, or a bold `!` if overdue. Timed reminders are overdue once their time passes; all-day ones only from the next day (matches Reminders). The timeline adds entries at upcoming due times so the `!` appears on time.
 - **Empty state:** checkmark icon + "All done".
 
