@@ -102,38 +102,52 @@ struct Safe_Reminders_WidgetEntryView : View {
             Label("Open the app to allow access", systemImage: "lock")
                 .font(.caption)
         } else {
-            VStack(alignment: .leading, spacing: 0) {
-                // Header like the system widget: full size with 0–1 reminders,
-                // smaller with 2, and dropped at 3 to make room.
-                if entry.reminders.count <= 2 {
-                    Text("Today")
-                        .font(.system(entry.reminders.count == 2 ? .caption : .headline,
-                                      design: .rounded, weight: .bold))
-                }
-                if entry.reminders.isEmpty {
-                    Text("No reminders")
-                }
-                ForEach(entry.reminders.prefix(3)) { reminder in
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        // Hidden copies of both markers keep titles lined up whichever one shows.
-                        ZStack {
-                            Text("•").hidden()
-                            Text("!").bold().hidden()
-                            if reminder.isOverdue(at: entry.date) {
-                                Text("!").bold()
-                            } else {
-                                Text("•")
-                            }
-                        }
-                        Text(reminder.title)
-                            .lineLimit(1)
+            Group {
+                if entry.reminders.count > 2 {
+                    // Full-size text only fits 2 lines.
+                    reminderList(font: .caption)
+                } else {
+                    // Use full size only if every title fits without being cut off with "…".
+                    ViewThatFits(in: [.horizontal, .vertical]) {
+                        reminderList(font: nil)
+                        reminderList(font: .caption)
                     }
                 }
             }
-            // Full-size text fits 2 lines; shrink only when showing 3.
-            .font(entry.reminders.count > 2 ? .caption : nil)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private func reminderList(font: Font?) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header like the system widget: full size with 0–1 reminders,
+            // smaller with 2, and dropped at 3 to make room.
+            if entry.reminders.count <= 2 {
+                Text("Today")
+                    .font(.system(entry.reminders.count == 2 ? .caption : .headline,
+                                  design: .rounded, weight: .bold))
+            }
+            if entry.reminders.isEmpty {
+                Text("No reminders")
+            }
+            ForEach(entry.reminders.prefix(3)) { reminder in
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    // Hidden copies of both markers keep titles lined up whichever one shows.
+                    ZStack {
+                        Text("•").hidden()
+                        Text("!").bold().hidden()
+                        if reminder.isOverdue(at: entry.date) {
+                            Text("!").bold()
+                        } else {
+                            Text("•")
+                        }
+                    }
+                    Text(reminder.title)
+                        .lineLimit(1)
+                }
+            }
+        }
+        .font(font)
     }
 }
 
@@ -159,6 +173,9 @@ struct Safe_Reminders_Widget: Widget {
     ReminderEntry.sample
     ReminderEntry(date: .now, reminders: Array(ReminderEntry.sample.reminders.prefix(2)))
     ReminderEntry(date: .now, reminders: Array(ReminderEntry.sample.reminders.prefix(1)))
+    ReminderEntry(date: .now, reminders: [
+        ReminderItem(id: "4", title: "Email the landlord about the broken dishwasher", dueDate: .now, hasTime: false),
+    ])
     ReminderEntry(date: .now, reminders: [])
     ReminderEntry(date: .now, reminders: [], hasAccess: false)
 }

@@ -9,7 +9,7 @@ A read-only replacement for the iOS Reminders **Lock Screen** widget. The system
 ## Design decisions
 - **Which reminders:** incomplete reminders due today or overdue (like the system "Today" list). No-due-date reminders are hidden.
 - **Lists:** all lists combined. No list picker for now.
-- **Layout:** up to 3 reminder titles, one per line, no due times (times didn't fit on device). Sorted by due date, overdue first. Default font when there are 1–2 reminders, `.caption` when there are 3+. A "Today" header in bold SF Pro Rounded (`.system(_, design: .rounded, weight: .bold)`) sits on top, copying the system widget: `.headline` size with 0–1 reminders, `.caption` with 2, none with 3+.
+- **Layout:** up to 3 reminder titles, one per line, no due times (times didn't fit on device). Sorted by due date, overdue first. Default font when there are 1–2 reminders, `.caption` when there are 3+. With 1–2, it also drops to `.caption` if any title (or the whole stack) would not fit at full size — done with `ViewThatFits(in: [.horizontal, .vertical])`. A "Today" header in bold SF Pro Rounded (`.system(_, design: .rounded, weight: .bold)`) sits on top, copying the system widget: `.headline` size with 0–1 reminders, `.caption` with 2, none with 3+.
 - **Markers:** each line starts with `•`, or a bold `!` if overdue. Timed reminders are overdue once their time passes; all-day ones only from the next day (matches Reminders). The timeline adds entries at upcoming due times so the `!` appears on time.
 - **Empty state:** the "Today" header with "No reminders" under it in the normal font.
 
