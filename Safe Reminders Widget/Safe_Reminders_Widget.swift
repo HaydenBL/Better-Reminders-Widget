@@ -101,15 +101,17 @@ struct Safe_Reminders_WidgetEntryView : View {
         if !entry.hasAccess {
             Label("Open the app to allow access", systemImage: "lock")
                 .font(.caption)
-        } else if entry.reminders.isEmpty {
-            Label("All done", systemImage: "checkmark.circle")
-                .font(.headline)
         } else {
             VStack(alignment: .leading, spacing: 0) {
-                // With a single reminder there's room for a header, like the system widget.
-                if entry.reminders.count == 1 {
+                // Header like the system widget: full size with 0–1 reminders,
+                // smaller with 2, and dropped at 3 to make room.
+                if entry.reminders.count <= 2 {
                     Text("Today")
-                        .font(.system(.headline, design: .rounded, weight: .bold))
+                        .font(.system(entry.reminders.count == 2 ? .caption : .headline,
+                                      design: .rounded, weight: .bold))
+                }
+                if entry.reminders.isEmpty {
+                    Text("No reminders")
                 }
                 ForEach(entry.reminders.prefix(3)) { reminder in
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
