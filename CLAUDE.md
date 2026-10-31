@@ -23,6 +23,7 @@ A read-only replacement for the iOS Reminders **Lock Screen** widget. The system
 ## Notes
 - Data comes from EventKit (`EKEventStore`, `EKReminder`). Access is granted in the app; the widget inherits it.
 - **Opening Reminders on tap:** `widgetURL` always opens the containing app (tested: pointing it straight at `x-apple-reminderkit://` just opened our app). So the widget uses `saferemindersapp://open-reminders`, and the app's `.onOpenURL` forwards to `x-apple-reminderkit://` (fallback `x-apple-reminder://`). Both Reminders schemes are undocumented. `OpenURLIntent` isn't an alternative: it only supports your own universal links.
+- **Expiry tracking:** the app target depends on `SideloadKit` (from the Sideboard repo) and calls `SideloadReporter.report()` in the `App` init. That writes this install's profile expiry to the App Group `group.se.haydenblai.sideload` so the Sideboard app can show it. Only the app target has the App Group; the widget doesn't need it.
 - Deployment target is iOS 27.2.
 - SourceKit may show "unavailable in macOS" errors for accessory families — false positives; the iOS build is fine.
 - The user commits changes themselves.

@@ -1,0 +1,15 @@
+{
+  "originHash" : "a907027a4719aec234a9b84176f14b638fa42be142d7f771b52b85c674163b7c",
+  "pins" : [
+    {
+      "identity" : "sideboard",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/HaydenBL/Sideboard",
+      "state" : {
+        "branch" : "master",
+        "revision" : "417d56c4339c4e51f747734d1cc591b98babfa34"
+      }
+    }
+  ],
+  "version" : 3
+}

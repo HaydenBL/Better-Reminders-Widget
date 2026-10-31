@@ -5,12 +5,18 @@
 //  Created by Hayden Lueck on 2026-10-29.
 //
 
+import SideloadKit
 import SwiftUI
 import WidgetKit
 
 @main
 struct Better_Reminders_WidgetApp: App {
     @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        // Tells the Sideboard app when this install expires.
+        SideloadReporter.report()
+    }
 
     var body: some Scene {
         WindowGroup {
