@@ -18,6 +18,7 @@ A read-only replacement for the iOS Reminders **Lock Screen** widget. The system
 - `Safe Reminders Widget/` — WidgetKit extension (target `Safe Reminders WidgetExtension`). `Safe_Reminders_Widget.swift` holds the provider, entry, view, and widget config.
 - Project file is Xcode's JSON-style `Better Reminders Widget.xcodeproj/project.xcproj` (not `project.pbxproj`). Info.plist values are set via `INFOPLIST_KEY_*` build settings there.
 - `NSRemindersFullAccessUsageDescription` is set on both targets.
+- App icon: `Better Reminders Widget/SafeReminders.icon` (Icon Composer bundle: two white dot-and-bar rows plus a "+" on a blue gradient; SVG layers in `Assets/`). The app target's `ASSETCATALOG_COMPILER_APPICON_NAME` is `SafeReminders`.
 
 ## Notes
 - Data comes from EventKit (`EKEventStore`, `EKReminder`). Access is granted in the app; the widget inherits it.

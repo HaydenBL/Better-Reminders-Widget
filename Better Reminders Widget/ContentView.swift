@@ -15,7 +15,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: hasAccess ? "checkmark.circle.fill" : "list.bullet")
-                .font(.largeTitle) +
+                .font(.largeTitle)
                 .foregroundStyle(.tint)
             Text(hasAccess ? "Reminders access granted" : "Reminders access needed")
                 .font(.headline)
